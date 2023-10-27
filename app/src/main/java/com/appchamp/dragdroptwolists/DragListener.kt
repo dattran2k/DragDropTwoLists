@@ -1,5 +1,6 @@
 package com.appchamp.dragdroptwolists
 
+import android.util.Log
 import android.view.DragEvent
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
@@ -7,7 +8,14 @@ import androidx.recyclerview.widget.RecyclerView
 class DragListener internal constructor(private val listener: CustomListener) : View.OnDragListener {
     private var isDropped = false
     override fun onDrag(v: View, event: DragEvent): Boolean {
+        Log.e("DragListener", "onDrag $event", )
         when (event.action) {
+            DragEvent.ACTION_DRAG_STARTED -> {
+                isDropped = false
+            }
+            DragEvent.ACTION_DRAG_ENTERED -> {
+                Log.e("DragListener", "ACTION_DRAG_ENTERED $v", )
+            }
             DragEvent.ACTION_DROP -> {
                 isDropped = true
                 var positionTarget = -1
@@ -37,8 +45,12 @@ class DragListener internal constructor(private val listener: CustomListener) : 
                             val listSource = adapterSource?.getList()?.apply {
                                 removeAt(positionSource)
                             }
-                            listSource?.let { adapterSource.updateList(it) }
-                            adapterSource?.notifyDataSetChanged()
+                            listSource?.let {
+                                adapterSource.updateList(it)
+                            }
+                            Log.e("DragListener", "positionSource $positionSource", )
+                            Log.e("DragListener", "positionTarget $positionTarget", )
+                            adapterSource?.notifyItemRemoved(positionSource)
                             val adapterTarget = target.adapter as CustomAdapter?
                             val customListTarget = adapterTarget?.getList()
                             if (positionTarget >= 0) {
@@ -47,26 +59,12 @@ class DragListener internal constructor(private val listener: CustomListener) : 
                                 list?.let { customListTarget?.add(it) }
                             }
                             customListTarget?.let { adapterTarget.updateList(it) }
-                            adapterTarget?.notifyDataSetChanged()
-                            if (source.id == recyclerView2 && adapterSource?.itemCount ?: 0 < 1) {
-                                listener.setEmptyList(View.VISIBLE, recyclerView2, emptyTextView2)
-                            }
-                            if (viewId == emptyTextView2) {
-                                listener.setEmptyList(View.GONE, recyclerView2, emptyTextView2)
-                            }
-                            if (source.id == recyclerView1 && adapterSource?.itemCount ?: 0 < 1) {
-                                listener.setEmptyList(View.VISIBLE, recyclerView1, emptyTextView1)
-                            }
-                            if (viewId == emptyTextView1) {
-                                listener.setEmptyList(View.GONE, recyclerView1, emptyTextView1)
-                            }
+                            adapterTarget?.notifyItemInserted(positionTarget)
+                            viewSource.visibility = View.VISIBLE
                         }
                     }
                 }
             }
-        }
-        if (!isDropped && event.localState != null) {
-            (event.localState as View).visibility = View.VISIBLE
         }
         return true
     }

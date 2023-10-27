@@ -17,11 +17,11 @@ class MainActivity : AppCompatActivity(), CustomListener  {
         val view = binding.root
         setContentView(view)
 
-        binding.recyclerView1.init(listOf("A", "B", "C"), binding.emptyListTextView1)
-        binding.recyclerView2.init(listOf("1", "2", "3"), binding.emptyListTextView2)
+        binding.recyclerView1.init(arrayListOf("A", "B", "C"), binding.emptyListTextView1)
+        binding.recyclerView2.init(arrayListOf("1", "2", "3"), binding.emptyListTextView2)
     }
 
-    private fun RecyclerView.init(list: List<String>, emptyTextView: TextView) {
+    private fun RecyclerView.init(list: ArrayList<String>, emptyTextView: TextView) {
         this.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
         val adapter = CustomAdapter(list, this@MainActivity)
         this.adapter = adapter

@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
+import android.view.View.DRAG_FLAG_OPAQUE
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.TextView
@@ -14,7 +15,7 @@ interface CustomListener {
     fun setEmptyList(visibility: Int, recyclerView: Int, emptyTextView: Int)
 }
 
-class CustomAdapter(private var list: List<String>, private val listener: CustomListener?)
+class CustomAdapter(private var list: ArrayList<String>, private val listener: CustomListener?)
     : RecyclerView.Adapter<CustomAdapter.CustomViewHolder?>(), View.OnTouchListener {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CustomViewHolder {
@@ -24,18 +25,19 @@ class CustomAdapter(private var list: List<String>, private val listener: Custom
 
     override fun getItemCount(): Int = list.size
 
-    fun updateList(list: MutableList<String>) {
+    fun updateList(list: ArrayList<String>) {
         this.list = list
     }
 
-    fun getList(): MutableList<String> = this.list.toMutableList()
+    fun getList(): ArrayList<String> = list
 
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
         when (event?.action) {
             MotionEvent.ACTION_DOWN -> {
+                val ds = DragShadow(v)
                 val data = ClipData.newPlainText("", "")
-                val shadowBuilder = View.DragShadowBuilder(v)
-                v?.startDragAndDrop(data, shadowBuilder, v, 0)
+                v?.visibility = View.GONE
+                v?.startDragAndDrop(data, ds, v, DRAG_FLAG_OPAQUE)
                 return true
             }
         }
@@ -54,7 +56,7 @@ class CustomAdapter(private var list: List<String>, private val listener: Custom
         holder.text?.text = list[position]
         holder.frameLayout?.tag = position
         holder.frameLayout?.setOnTouchListener(this)
-        holder.frameLayout?.setOnDragListener(DragListener(listener!!))
+        holder.frameLayout?.setOnDragListener(dragInstance)
     }
 
     class CustomViewHolder(inflater: LayoutInflater, parent: ViewGroup) :
