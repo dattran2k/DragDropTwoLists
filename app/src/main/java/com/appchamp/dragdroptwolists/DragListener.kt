@@ -5,16 +5,21 @@ import android.view.DragEvent
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 
-class DragListener internal constructor(private val listener: CustomListener) : View.OnDragListener {
+class DragListener internal constructor() : View.OnDragListener {
     private var isDropped = false
     override fun onDrag(v: View, event: DragEvent): Boolean {
-        Log.e("DragListener", "onDrag $event", )
+        Log.e("DragListener", "onDrag $event")
         when (event.action) {
             DragEvent.ACTION_DRAG_STARTED -> {
                 isDropped = false
             }
+
             DragEvent.ACTION_DRAG_ENTERED -> {
-                Log.e("DragListener", "ACTION_DRAG_ENTERED $v", )
+                Log.e("DragListener", "ACTION_DRAG_ENTERED $v")
+            }
+            DragEvent.ACTION_DRAG_ENDED -> {
+                Log.e("DragListener", "ACTION_DRAG_ENTERED $v")
+                ( event.localState as View?)?.visibility = View.VISIBLE
             }
             DragEvent.ACTION_DROP -> {
                 isDropped = true
@@ -30,37 +35,49 @@ class DragListener internal constructor(private val listener: CustomListener) : 
                     frameLayoutItem, emptyTextView1, emptyTextView2, recyclerView1, recyclerView2 -> {
                         val target: RecyclerView
                         when (viewId) {
-                            emptyTextView1, recyclerView1 -> target = v.rootView.findViewById<View>(recyclerView1) as RecyclerView
-                            emptyTextView2, recyclerView2 -> target = v.rootView.findViewById<View>(recyclerView2) as RecyclerView
+                            emptyTextView1, recyclerView1 -> target =
+                                v.rootView.findViewById<View>(recyclerView1) as RecyclerView
+
+                            emptyTextView2, recyclerView2 -> target =
+                                v.rootView.findViewById<View>(recyclerView2) as RecyclerView
+
                             else -> {
                                 target = v.parent as RecyclerView
                                 positionTarget = v.tag as Int
                             }
                         }
+                        // TODO ,khi vị trí scroll ở ngoài rv, thì sẽ không có position
+                        // Cần tìm cách
                         if (viewSource != null) {
                             val source = viewSource.parent as RecyclerView
                             val adapterSource = source.adapter as CustomAdapter?
                             val positionSource = viewSource.tag as Int
                             val list: String? = adapterSource?.getList()?.get(positionSource)
-                            val listSource = adapterSource?.getList()?.apply {
+                            adapterSource?.getList()?.apply {
                                 removeAt(positionSource)
+                                adapterSource.notifyItemRemoved(positionSource)
+                                adapterSource.notifyDataSetChanged()
                             }
-                            listSource?.let {
-                                adapterSource.updateList(it)
-                            }
-                            Log.e("DragListener", "positionSource $positionSource", )
-                            Log.e("DragListener", "positionTarget $positionTarget", )
-                            adapterSource?.notifyItemRemoved(positionSource)
+
                             val adapterTarget = target.adapter as CustomAdapter?
                             val customListTarget = adapterTarget?.getList()
                             if (positionTarget >= 0) {
                                 list?.let { customListTarget?.add(positionTarget, it) }
+                                viewSource.tag = positionTarget
+                                adapterTarget?.notifyItemInserted(positionTarget)
+                                adapterSource?.notifyDataSetChanged()
                             } else {
-                                list?.let { customListTarget?.add(it) }
+                                if (list != null && customListTarget != null) {
+                                    customListTarget.add(list)
+                                    viewSource.tag = customListTarget.size - 1
+                                    adapterTarget.notifyItemInserted(customListTarget.size - 1)
+                                    adapterSource.notifyDataSetChanged()
+                                }
                             }
-                            customListTarget?.let { adapterTarget.updateList(it) }
-                            adapterTarget?.notifyItemInserted(positionTarget)
+
                             viewSource.visibility = View.VISIBLE
+                            Log.e("DragListener", "positionSource $positionSource")
+                            Log.e("DragListener", "positionTarget $positionTarget")
                         }
                     }
                 }

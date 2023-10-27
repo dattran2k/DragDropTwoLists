@@ -11,12 +11,8 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-interface CustomListener {
-    fun setEmptyList(visibility: Int, recyclerView: Int, emptyTextView: Int)
-}
 
-class CustomAdapter(private var list: ArrayList<String>, private val listener: CustomListener?)
-    : RecyclerView.Adapter<CustomAdapter.CustomViewHolder?>(), View.OnTouchListener {
+class CustomAdapter(private var list: ArrayList<String>,val dragListener: DragListener) : RecyclerView.Adapter<CustomAdapter.CustomViewHolder?>(), View.OnTouchListener {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CustomViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -44,19 +40,12 @@ class CustomAdapter(private var list: ArrayList<String>, private val listener: C
         return false
     }
 
-    val dragInstance: DragListener?
-        get() = if (listener != null) {
-            DragListener(listener)
-        } else {
-            Log.e(javaClass::class.simpleName, "Listener not initialized")
-            null
-        }
 
     override fun onBindViewHolder(holder: CustomViewHolder, position: Int) {
         holder.text?.text = list[position]
         holder.frameLayout?.tag = position
         holder.frameLayout?.setOnTouchListener(this)
-        holder.frameLayout?.setOnDragListener(dragInstance)
+        holder.frameLayout?.setOnDragListener(dragListener)
     }
 
     class CustomViewHolder(inflater: LayoutInflater, parent: ViewGroup) :

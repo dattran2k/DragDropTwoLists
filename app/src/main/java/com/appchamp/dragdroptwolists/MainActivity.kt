@@ -7,8 +7,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.appchamp.dragdroptwolists.databinding.ActivityMainBinding
 
-class MainActivity : AppCompatActivity(), CustomListener  {
-
+class MainActivity : AppCompatActivity() {
+    val dragInstance: DragListener = DragListener()
     private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,15 +23,10 @@ class MainActivity : AppCompatActivity(), CustomListener  {
 
     private fun RecyclerView.init(list: ArrayList<String>, emptyTextView: TextView) {
         this.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
-        val adapter = CustomAdapter(list, this@MainActivity)
+        val adapter = CustomAdapter(list, dragInstance)
         this.adapter = adapter
-        emptyTextView.setOnDragListener(adapter.dragInstance)
-        this.setOnDragListener(adapter.dragInstance)
-    }
-
-    override fun setEmptyList(visibility: Int, recyclerView: Int, emptyTextView: Int) {
-        findViewById<RecyclerView>(recyclerView).visibility = visibility
-        findViewById<TextView>(emptyTextView).visibility = visibility
+        emptyTextView.setOnDragListener(dragInstance)
+        this.setOnDragListener(dragInstance)
     }
 }
 
