@@ -1,6 +1,7 @@
 package com.appchamp.dragdroptwolists
 
 import android.content.ClipData
+import android.content.Context
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -9,10 +10,15 @@ import android.view.View.DRAG_FLAG_OPAQUE
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 
 
-class CustomAdapter(private var list: ArrayList<String>,val dragListener: DragListener) : RecyclerView.Adapter<CustomAdapter.CustomViewHolder?>(), View.OnTouchListener {
+class CustomAdapter(
+    val context: Context,
+    private var list: ArrayList<String>,
+    val dragListener: View.OnDragListener
+) : RecyclerView.Adapter<CustomAdapter.CustomViewHolder?>(){
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CustomViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -21,31 +27,21 @@ class CustomAdapter(private var list: ArrayList<String>,val dragListener: DragLi
 
     override fun getItemCount(): Int = list.size
 
-    fun updateList(list: ArrayList<String>) {
-        this.list = list
-    }
-
-    fun getList(): ArrayList<String> = list
-
-    override fun onTouch(v: View?, event: MotionEvent?): Boolean {
-        when (event?.action) {
-            MotionEvent.ACTION_DOWN -> {
-                val ds = DragShadow(v)
-                val data = ClipData.newPlainText("", "")
-                v?.visibility = View.GONE
-                v?.startDragAndDrop(data, ds, v, DRAG_FLAG_OPAQUE)
-                return true
-            }
-        }
-        return false
-    }
-
+    fun getList(): ArrayList<String> = ArrayList(list)
 
     override fun onBindViewHolder(holder: CustomViewHolder, position: Int) {
         holder.text?.text = list[position]
-        holder.frameLayout?.tag = position
-        holder.frameLayout?.setOnTouchListener(this)
+        holder.frameLayout?.tag = list[position]
+        holder.frameLayout?.setOnLongClickListener { v ->
+            val ds = DragShadow(v)
+            val data = ClipData.newPlainText("", "")
+            v?.startDragAndDrop(data, ds, v, DRAG_FLAG_OPAQUE)
+            v?.visibility = View.VISIBLE
+            true
+        }
         holder.frameLayout?.setOnDragListener(dragListener)
+        holder.frameLayout?.setBackgroundColor(ContextCompat.getColor(context, R.color.teal_200))
+        holder.frameLayout?.visibility = View.VISIBLE
     }
 
     class CustomViewHolder(inflater: LayoutInflater, parent: ViewGroup) :
@@ -57,5 +53,10 @@ class CustomAdapter(private var list: ArrayList<String>,val dragListener: DragLi
             text = itemView.findViewById(R.id.text)
             frameLayout = itemView.findViewById(R.id.frame_layout_item)
         }
+    }
+
+    fun updateList(list: List<String>) {
+        this.list.clear()
+        this.list.addAll(list)
     }
 }

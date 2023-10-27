@@ -5,84 +5,99 @@ import android.view.DragEvent
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 
-class DragListener internal constructor() : View.OnDragListener {
+class DragListener(val onViewEntered: (View) -> Unit, val onViewExited: (View) -> Unit) :
+    View.OnDragListener {
     private var isDropped = false
     override fun onDrag(v: View, event: DragEvent): Boolean {
-        Log.e("DragListener", "onDrag $event")
+        Log.e(
+            "DropListener",
+            "DropListener onDrag\ntarget :$v\nsource :${event.localState}\naction : ${
+                stringByAction(event.action)
+            }"
+        )
         when (event.action) {
             DragEvent.ACTION_DRAG_STARTED -> {
                 isDropped = false
+                (event.localState as View).visibility = View.INVISIBLE
+            }
+
+            DragEvent.ACTION_DRAG_EXITED -> {
+                onViewExited(v)
             }
 
             DragEvent.ACTION_DRAG_ENTERED -> {
-                Log.e("DragListener", "ACTION_DRAG_ENTERED $v")
+                onViewEntered(v)
             }
+
             DragEvent.ACTION_DRAG_ENDED -> {
-                Log.e("DragListener", "ACTION_DRAG_ENTERED $v")
-                ( event.localState as View?)?.visibility = View.VISIBLE
+//                val view = event.localState as? View?
+//                if (!isDropped) {
+//                    view?.post {
+//                        view.visibility = View.VISIBLE
+//                    }
+//                }
             }
+
             DragEvent.ACTION_DROP -> {
                 isDropped = true
-                var positionTarget = -1
-                val viewSource = event.localState as View?
-                val viewId = v.id
-                val frameLayoutItem = R.id.frame_layout_item
-                val emptyTextView1 = R.id.empty_list_text_view_1
-                val emptyTextView2 = R.id.empty_list_text_view_2
-                val recyclerView1 = R.id.recycler_view_1
-                val recyclerView2 = R.id.recycler_view_2
-                when (viewId) {
-                    frameLayoutItem, emptyTextView1, emptyTextView2, recyclerView1, recyclerView2 -> {
-                        val target: RecyclerView
-                        when (viewId) {
-                            emptyTextView1, recyclerView1 -> target =
-                                v.rootView.findViewById<View>(recyclerView1) as RecyclerView
+                // TODO ,khi vị trí scroll ở ngoài rv, thì sẽ không có position
+                // Cần tìm cách
+                val viewFrom = event.localState as View?
+                if (viewFrom != null) {
+                    val dataFrom = viewFrom.tag as String
+                    val rvFrom = viewFrom.parent as RecyclerView
+                    val adapterFrom = rvFrom.adapter as CustomAdapter
+                    val listFrom = adapterFrom.getList()
+                    val positionFrom = listFrom.indexOfFirst {
+                        it == dataFrom
+                    }
+                    val viewTo = v
+                    val rvTo = viewTo.parent as RecyclerView
+                    val adapterTo = rvTo.adapter as CustomAdapter
 
-                            emptyTextView2, recyclerView2 -> target =
-                                v.rootView.findViewById<View>(recyclerView2) as RecyclerView
-
-                            else -> {
-                                target = v.parent as RecyclerView
-                                positionTarget = v.tag as Int
-                            }
+                    if (positionFrom > -1) {
+                        listFrom.removeAt(positionFrom)
+                        adapterFrom.updateList(listFrom)
+                        adapterFrom.notifyItemRemoved(positionFrom)
+                        val listTo = adapterTo.getList()
+                        val positionTo = listTo.indexOfFirst {
+                            it == viewTo.tag
+                        }.let {
+                            if (it < 0)
+                                listTo.size
+                            else
+                                it
                         }
-                        // TODO ,khi vị trí scroll ở ngoài rv, thì sẽ không có position
-                        // Cần tìm cách
-                        if (viewSource != null) {
-                            val source = viewSource.parent as RecyclerView
-                            val adapterSource = source.adapter as CustomAdapter?
-                            val positionSource = viewSource.tag as Int
-                            val list: String? = adapterSource?.getList()?.get(positionSource)
-                            adapterSource?.getList()?.apply {
-                                removeAt(positionSource)
-                                adapterSource.notifyItemRemoved(positionSource)
-                                adapterSource.notifyDataSetChanged()
-                            }
 
-                            val adapterTarget = target.adapter as CustomAdapter?
-                            val customListTarget = adapterTarget?.getList()
-                            if (positionTarget >= 0) {
-                                list?.let { customListTarget?.add(positionTarget, it) }
-                                viewSource.tag = positionTarget
-                                adapterTarget?.notifyItemInserted(positionTarget)
-                                adapterSource?.notifyDataSetChanged()
-                            } else {
-                                if (list != null && customListTarget != null) {
-                                    customListTarget.add(list)
-                                    viewSource.tag = customListTarget.size - 1
-                                    adapterTarget.notifyItemInserted(customListTarget.size - 1)
-                                    adapterSource.notifyDataSetChanged()
-                                }
-                            }
-
-                            viewSource.visibility = View.VISIBLE
-                            Log.e("DragListener", "positionSource $positionSource")
-                            Log.e("DragListener", "positionTarget $positionTarget")
+                        var isRemove = false
+                        if ((viewTo.tag as String).contains("Empty")) {
+                            listTo.removeAt(positionTo)
+                            isRemove = true
                         }
+
+                        listTo.add(positionTo, dataFrom)
+                        adapterTo.updateList(listTo)
+                        if (isRemove)
+                            adapterTo.notifyItemChanged(positionTo)
+                        else
+                            adapterTo.notifyItemInserted(positionTo)
                     }
                 }
             }
         }
+
         return true
+    }
+
+    fun stringByAction(action: Int): String {
+        return when (action) {
+            DragEvent.ACTION_DRAG_STARTED -> "ACTION_DRAG_STARTED"
+            DragEvent.ACTION_DRAG_EXITED -> "ACTION_DRAG_STARTED"
+            DragEvent.ACTION_DRAG_ENTERED -> "ACTION_DRAG_STARTED"
+            DragEvent.ACTION_DROP -> "ACTION_DRAG_STARTED"
+            DragEvent.ACTION_DRAG_ENDED -> "ACTION_DRAG_STARTED"
+            DragEvent.ACTION_DRAG_LOCATION -> "ACTION_DRAG_STARTED"
+            else -> "$action"
+        }
     }
 }
