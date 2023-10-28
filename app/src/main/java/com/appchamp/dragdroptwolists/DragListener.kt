@@ -5,6 +5,14 @@ import android.view.DragEvent
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 
+/** Ý tưởng khi drag fragment
+ * fragment sẽ nằm trong fragment container, hay ở đâu đấy nhưng bắt buộc phải nằm trong 1 view
+ * khi đó ta cần làm là có thể drag được view chứa fragment
+ */
+
+/**
+ *
+ */
 class DragListener(val onViewEntered: (View) -> Unit, val onViewExited: (View) -> Unit) :
     View.OnDragListener {
     private var isDropped = false
