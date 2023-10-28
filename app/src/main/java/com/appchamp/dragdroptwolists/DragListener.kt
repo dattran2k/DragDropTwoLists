@@ -3,7 +3,10 @@ package com.appchamp.dragdroptwolists
 import android.util.Log
 import android.view.DragEvent
 import android.view.View
-import androidx.recyclerview.widget.RecyclerView
+import android.widget.FrameLayout
+import androidx.core.view.get
+import androidx.fragment.app.FragmentContainerView
+import androidx.fragment.app.FragmentTransaction
 
 /** Ý tưởng khi drag fragment
  * fragment sẽ nằm trong fragment container, hay ở đâu đấy nhưng bắt buộc phải nằm trong 1 view
@@ -35,7 +38,7 @@ import androidx.recyclerview.widget.RecyclerView
  * => Xử lý ở viewpager có những trường hợp cần đẩy các fragment ra sau hoặc ra trước, chạy
 animation để view giữa các viewpager (Cái này có thể sử dụng fade mà không dùng slide anim )
  */
-class DragListener(val onViewEntered: (View) -> Unit, val onViewExited: (View) -> Unit) :
+class DragListener() :
     View.OnDragListener {
     private var isDropped = false
     override fun onDrag(v: View, event: DragEvent): Boolean {
@@ -52,11 +55,11 @@ class DragListener(val onViewEntered: (View) -> Unit, val onViewExited: (View) -
             }
 
             DragEvent.ACTION_DRAG_EXITED -> {
-                onViewExited(v)
+
             }
 
             DragEvent.ACTION_DRAG_ENTERED -> {
-                onViewEntered(v)
+
             }
 
             DragEvent.ACTION_DRAG_ENDED -> {
@@ -72,46 +75,16 @@ class DragListener(val onViewEntered: (View) -> Unit, val onViewExited: (View) -
                 isDropped = true
                 // TODO ,khi vị trí scroll ở ngoài rv, thì sẽ không có position
                 // Cần tìm cách
-                val viewFrom = event.localState as View?
+                val viewFrom = event.localState as FrameLayout?
+                val viewTo = v as FrameLayout
                 if (viewFrom != null) {
-                    val dataFrom = viewFrom.tag as String
-                    val rvFrom = viewFrom.parent as RecyclerView
-                    val adapterFrom = rvFrom.adapter as CustomAdapter
-                    val listFrom = adapterFrom.getList()
-                    val positionFrom = listFrom.indexOfFirst {
-                        it == dataFrom
-                    }
-                    val viewTo = v
-                    val rvTo = viewTo.parent as RecyclerView
-                    val adapterTo = rvTo.adapter as CustomAdapter
+                    val hostFrom = viewFrom[0]
+                    val hostTo = viewTo[0]
+                    viewFrom.removeView(hostFrom)
+                    viewTo.removeView(hostTo)
 
-                    if (positionFrom > -1) {
-                        listFrom.removeAt(positionFrom)
-                        adapterFrom.updateList(listFrom)
-                        adapterFrom.notifyItemRemoved(positionFrom)
-                        val listTo = adapterTo.getList()
-                        val positionTo = listTo.indexOfFirst {
-                            it == viewTo.tag
-                        }.let {
-                            if (it < 0)
-                                listTo.size
-                            else
-                                it
-                        }
-
-                        var isRemove = false
-                        if ((viewTo.tag as String).contains("Empty")) {
-                            listTo.removeAt(positionTo)
-                            isRemove = true
-                        }
-
-                        listTo.add(positionTo, dataFrom)
-                        adapterTo.updateList(listTo)
-                        if (isRemove)
-                            adapterTo.notifyItemChanged(positionTo)
-                        else
-                            adapterTo.notifyItemInserted(positionTo)
-                    }
+                    viewFrom.addView(hostTo)
+                    viewTo.addView(hostFrom)
                 }
             }
         }
