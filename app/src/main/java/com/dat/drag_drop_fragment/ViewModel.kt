@@ -1,8 +1,6 @@
-package com.appchamp.dragdroptwolists
+package com.dat.drag_drop_fragment
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 
 object ViewModel {
     var screenWidth : Int = 0

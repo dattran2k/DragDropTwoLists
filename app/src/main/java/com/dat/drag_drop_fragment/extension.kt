@@ -1,4 +1,4 @@
-package com.appchamp.dragdroptwolists
+package com.dat.drag_drop_fragment
 
 import android.content.Context
 import android.util.TypedValue
@@ -32,3 +32,16 @@ fun View.toPx(dp: Int): Int = TypedValue.applyDimension(
     dp.toFloat(),
     resources.displayMetrics
 ).toInt()
+
+fun ViewGroup.getAllViews(): List<View> {
+    val views = ArrayList<View>()
+    for (i in 0 until childCount) {
+        views.add(getChildAt(i))
+    }
+    return views
+}
+fun View?.removeSelf() {
+    this ?: return
+    val parentView = parent as? ViewGroup ?: return
+    parentView.removeView(this)
+}

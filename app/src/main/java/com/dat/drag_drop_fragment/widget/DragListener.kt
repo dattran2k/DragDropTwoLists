@@ -1,4 +1,4 @@
-package com.appchamp.dragdroptwolists
+package com.dat.drag_drop_fragment.widget
 
 import android.util.Log
 import android.view.DragEvent
@@ -49,40 +49,35 @@ class DragListener : View.OnDragListener {
         when (event.action) {
             DragEvent.ACTION_DRAG_STARTED -> {
                 isDropped = false
-                (event.localState as View).visibility = View.INVISIBLE
-            }
-
-            DragEvent.ACTION_DRAG_EXITED -> {
-                if (v is AddView) {
-                    v.onNoHover()
-                }
+//                (event.localState as View).visibility = View.INVISIBLE
             }
 
             DragEvent.ACTION_DRAG_ENTERED -> {
                 Log.e(TAG, "onDrag: ${stringByAction(event.action)}")
-                val viewpager = parentViewPager(v)
                 if (v is DropAble) {
-                    v.onHover()
+                    v.onHover(event.localState as? View?)
                 }
-                if (viewpager != null && viewpager is WidgetMaster) {
-                    Log.e(TAG, "onDrag: viewpager : ${viewpager.getAllWidgetContainer()}")
+            }
+
+            DragEvent.ACTION_DRAG_EXITED -> {
+                if (v is ReplaceWidgetHolder) {
+                    v.onLeaveHover(event.localState as? View?)
                 }
             }
 
             DragEvent.ACTION_DRAG_ENDED -> {
                 val view = event.localState as? View?
-                if (!isDropped) {
-                    view?.post {
-                        view.visibility = View.VISIBLE
-                    }
-                }
+//                view?.post {
+//                    view.visibility = View.VISIBLE
+//                }
                 if (v is DropAble) {
-                    v.onNoHover()
+                    v.onLeaveHover(v)
                 }
             }
 
             DragEvent.ACTION_DROP -> {
                 isDropped = true
+//                (event.localState as? View?)?.visibility = View.VISIBLE
                 val viewFrom = event.localState
                 if (v is DropAble && viewFrom is View)
                     v.drop(viewFrom)
@@ -106,21 +101,4 @@ class DragListener : View.OnDragListener {
         }
     }
 
-    private fun parentViewPager(view: View?): View? {
-        var v = view?.parent as View?
-        while (v != null && v !is WidgetMaster) {
-            val parent: Any = v.parent
-            v = if (parent is View) parent else return null
-        }
-        return v
-    }
-
-    private fun findWidgetContainer(view: View?): View? {
-        var v = view?.parent as View?
-        while (v != null && v !is WidgetContainer) {
-            val parent: Any = v.parent
-            v = if (parent is View) parent else return null
-        }
-        return v
-    }
 }

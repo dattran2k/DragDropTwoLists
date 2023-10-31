@@ -1,4 +1,4 @@
-package com.appchamp.dragdroptwolists;
+package com.dat.drag_drop_fragment;
 
 import android.graphics.Canvas;
 import android.graphics.Point;

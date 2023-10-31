@@ -1,9 +1,13 @@
-package com.appchamp.dragdroptwolists
+package com.dat.drag_drop_fragment
 
 import android.os.Bundle
+import android.view.ViewGroup.MarginLayoutParams
 import androidx.appcompat.app.AppCompatActivity
-import com.appchamp.dragdroptwolists.databinding.ActivityMainRvBinding
-import com.appchamp.dragdroptwolists.fragment.ContainerFragment
+import androidx.core.view.updateLayoutParams
+import com.dat.drag_drop_fragment.databinding.ActivityMainRvBinding
+import com.dat.drag_drop_fragment.fragment.TextFragment
+import com.dat.drag_drop_fragment.widget.DragListener
+import com.dat.drag_drop_fragment.widget.WidgetMaster.Companion.MARGIN_START_EDIT_MODE
 
 class MainActivityNestedScroll : AppCompatActivity() {
     val dragInstance: DragListener = DragListener()
@@ -14,15 +18,16 @@ class MainActivityNestedScroll : AppCompatActivity() {
         binding = ActivityMainRvBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
-        val listFragment = List(((list.size / 2.0) + 0.5).toInt()) {
-            ContainerFragment.newInstance(
-                list.subList(it * 2, list.size).take(2).joinToString()
-            )
+        val listFragment = list.map {
+            TextFragment.newInstance(it.toString())
         }
 
         binding.widgetMaster.setUpFragment(listFragment, supportFragmentManager)
         ViewModel.isEnableEditModel.observe(this) {
             binding.widgetMaster.updateEditMode(it)
+            binding.widgetMaster.updateLayoutParams<MarginLayoutParams> {
+                marginStart = if (it == true) toPx(MARGIN_START_EDIT_MODE) else 0
+            }
         }
         binding.btn.setOnClickListener {
             ViewModel.isEnableEditModel.value = ViewModel.isEnableEditModel.value != true

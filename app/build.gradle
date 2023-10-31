@@ -3,11 +3,11 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 android {
-    namespace "com.appchamp.dragdroptwolists"
+    namespace "com.dat.drag_drop_fragment"
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.appchamp.dragdroptwolists"
+        applicationId "com.dat.drag_drop_fragment"
         minSdk 24
         targetSdk 34
         versionCode 1

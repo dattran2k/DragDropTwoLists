@@ -1,4 +1,4 @@
-package com.appchamp.dragdroptwolists.fragment
+package com.dat.drag_drop_fragment.fragment
 
 import android.os.Bundle
 import android.util.Log
@@ -6,7 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.appchamp.dragdroptwolists.databinding.ListItemBinding
+import com.dat.drag_drop_fragment.databinding.ListItemBinding
 
 class TextFragment : Fragment() {
     val TAG = "TextFragment"

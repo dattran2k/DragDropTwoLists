@@ -1,4 +1,4 @@
-package com.appchamp.dragdroptwolists
+package com.dat.drag_drop_fragment
 
 import org.junit.Test
 
