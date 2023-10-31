@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.dat.drag_drop_fragment.DragShadow
 import com.dat.drag_drop_fragment.getAllViews
+import com.dat.drag_drop_fragment.removeSelf
 
 class WidgetMaster : LinearLayoutCompat, DropAble.OnDrop {
     companion object {
@@ -96,8 +97,8 @@ class WidgetMaster : LinearLayoutCompat, DropAble.OnDrop {
         val from = getChildAt(sourcePosition)
         val to = getChildAt(targetPosition)
         removeTransition()
-        removeView(from)
-        removeView(to)
+        from.removeSelf()
+        to.removeSelf()
         addView(to, sourcePosition)
         addTransition()
         addView(from, targetPosition)

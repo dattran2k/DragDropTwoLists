@@ -49,7 +49,7 @@ class DragListener : View.OnDragListener {
         when (event.action) {
             DragEvent.ACTION_DRAG_STARTED -> {
                 isDropped = false
-//                (event.localState as View).visibility = View.INVISIBLE
+                (event.localState as View).visibility = View.INVISIBLE
             }
 
             DragEvent.ACTION_DRAG_ENTERED -> {
@@ -67,9 +67,9 @@ class DragListener : View.OnDragListener {
 
             DragEvent.ACTION_DRAG_ENDED -> {
                 val view = event.localState as? View?
-//                view?.post {
-//                    view.visibility = View.VISIBLE
-//                }
+                view?.post {
+                    view.visibility = View.VISIBLE
+                }
                 if (v is DropAble) {
                     v.onLeaveHover(v)
                 }
@@ -77,7 +77,7 @@ class DragListener : View.OnDragListener {
 
             DragEvent.ACTION_DROP -> {
                 isDropped = true
-//                (event.localState as? View?)?.visibility = View.VISIBLE
+                (event.localState as? View?)?.visibility = View.VISIBLE
                 val viewFrom = event.localState
                 if (v is DropAble && viewFrom is View)
                     v.drop(viewFrom)
