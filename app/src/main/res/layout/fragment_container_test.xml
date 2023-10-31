@@ -1,29 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TableRow xmlns:android="http://schemas.android.com/apk/res/android"
+<com.appchamp.dragdroptwolists.WidgetContainer xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
+    android:clipChildren="false"
     android:layout_height="match_parent">
 
-    <FrameLayout
-        android:id="@+id/view1"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1">
-
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/frag1"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-    </FrameLayout>
-
-    <FrameLayout
-        android:id="@+id/view2"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1">
-
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/frag2"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-    </FrameLayout>
-</TableRow>
+</com.appchamp.dragdroptwolists.WidgetContainer>

@@ -3,10 +3,6 @@ package com.appchamp.dragdroptwolists
 import android.util.Log
 import android.view.DragEvent
 import android.view.View
-import android.widget.FrameLayout
-import androidx.core.view.get
-import androidx.fragment.app.FragmentContainerView
-import androidx.fragment.app.FragmentTransaction
 
 /** Ý tưởng khi drag fragment
  * fragment sẽ nằm trong fragment container, hay ở đâu đấy nhưng bắt buộc phải nằm trong 1 view
@@ -38,16 +34,18 @@ import androidx.fragment.app.FragmentTransaction
  * => Xử lý ở viewpager có những trường hợp cần đẩy các fragment ra sau hoặc ra trước, chạy
 animation để view giữa các viewpager (Cái này có thể sử dụng fade mà không dùng slide anim )
  */
-class DragListener() :
-    View.OnDragListener {
+class DragListener : View.OnDragListener {
+    val TAG = "DragListener"
+
+
     private var isDropped = false
     override fun onDrag(v: View, event: DragEvent): Boolean {
-        Log.e(
-            "DropListener",
-            "DropListener onDrag\ntarget :$v\nsource :${event.localState}\naction : ${
-                stringByAction(event.action)
-            }"
-        )
+//        Log.e(
+//            "DropListener",
+//            "DropListener onDrag\ntarget :$v\nsource :${event.localState}\naction : ${
+//                stringByAction(event.action)
+//            }"
+//        )
         when (event.action) {
             DragEvent.ACTION_DRAG_STARTED -> {
                 isDropped = false
@@ -55,11 +53,20 @@ class DragListener() :
             }
 
             DragEvent.ACTION_DRAG_EXITED -> {
-
+                if (v is AddView) {
+                    v.onNoHover()
+                }
             }
 
             DragEvent.ACTION_DRAG_ENTERED -> {
-
+                Log.e(TAG, "onDrag: ${stringByAction(event.action)}")
+                val viewpager = parentViewPager(v)
+                if (v is DropAble) {
+                    v.onHover()
+                }
+                if (viewpager != null && viewpager is WidgetMaster) {
+                    Log.e(TAG, "onDrag: viewpager : ${viewpager.getAllWidgetContainer()}")
+                }
             }
 
             DragEvent.ACTION_DRAG_ENDED -> {
@@ -69,23 +76,18 @@ class DragListener() :
                         view.visibility = View.VISIBLE
                     }
                 }
+                if (v is DropAble) {
+                    v.onNoHover()
+                }
             }
 
             DragEvent.ACTION_DROP -> {
                 isDropped = true
-                // TODO ,khi vị trí scroll ở ngoài rv, thì sẽ không có position
-                // Cần tìm cách
-                val viewFrom = event.localState as FrameLayout?
-                val viewTo = v as FrameLayout
-                if (viewFrom != null) {
-                    val hostFrom = viewFrom[0]
-                    val hostTo = viewTo[0]
-                    viewFrom.removeView(hostFrom)
-                    viewTo.removeView(hostTo)
-
-                    viewFrom.addView(hostTo)
-                    viewTo.addView(hostFrom)
-                }
+                val viewFrom = event.localState
+                if (v is DropAble && viewFrom is View)
+                    v.drop(viewFrom)
+                else
+                    return false
             }
         }
 
@@ -95,12 +97,30 @@ class DragListener() :
     fun stringByAction(action: Int): String {
         return when (action) {
             DragEvent.ACTION_DRAG_STARTED -> "ACTION_DRAG_STARTED"
-            DragEvent.ACTION_DRAG_EXITED -> "ACTION_DRAG_STARTED"
-            DragEvent.ACTION_DRAG_ENTERED -> "ACTION_DRAG_STARTED"
-            DragEvent.ACTION_DROP -> "ACTION_DRAG_STARTED"
-            DragEvent.ACTION_DRAG_ENDED -> "ACTION_DRAG_STARTED"
-            DragEvent.ACTION_DRAG_LOCATION -> "ACTION_DRAG_STARTED"
+            DragEvent.ACTION_DRAG_EXITED -> "ACTION_DRAG_EXITED"
+            DragEvent.ACTION_DRAG_ENTERED -> "ACTION_DRAG_ENTERED"
+            DragEvent.ACTION_DROP -> "ACTION_DROP"
+            DragEvent.ACTION_DRAG_ENDED -> "ACTION_DRAG_ENDED"
+            DragEvent.ACTION_DRAG_LOCATION -> "ACTION_DRAG_LOCATION"
             else -> "$action"
         }
+    }
+
+    private fun parentViewPager(view: View?): View? {
+        var v = view?.parent as View?
+        while (v != null && v !is WidgetMaster) {
+            val parent: Any = v.parent
+            v = if (parent is View) parent else return null
+        }
+        return v
+    }
+
+    private fun findWidgetContainer(view: View?): View? {
+        var v = view?.parent as View?
+        while (v != null && v !is WidgetContainer) {
+            val parent: Any = v.parent
+            v = if (parent is View) parent else return null
+        }
+        return v
     }
 }
