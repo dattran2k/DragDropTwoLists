@@ -7,24 +7,29 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.appcompat.widget.LinearLayoutCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.dat.drag_drop_fragment.DragShadow
 import com.dat.drag_drop_fragment.getAllViews
 import com.dat.drag_drop_fragment.removeSelf
+import com.dat.drag_drop_fragment.toPx
 
-class WidgetMaster : LinearLayoutCompat, DropAble.OnDrop {
+class WidgetMaster : LinearLayoutCompat, DropAble.OnDropCallBack {
     companion object {
         const val TAG = "WidgetMaster"
         const val MARGIN_START_EDIT_MODE = 40
+        fun View?.findWidgetMaster(): WidgetMaster? {
+            if (this is WidgetMaster)
+                return this
+            if (this == null)
+                return null
+            return (this.parent as? View?)?.findWidgetMaster()
+        }
     }
 
     var viewPortWidth = 0
-
-    val dragInstance: DragListener by lazy {
-        DragListener()
-    }
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
@@ -38,6 +43,10 @@ class WidgetMaster : LinearLayoutCompat, DropAble.OnDrop {
         addTransition()
     }
 
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        layoutParams.width = toPx(16)
+    }
 
     var isEditMode = false
 
@@ -66,14 +75,17 @@ class WidgetMaster : LinearLayoutCompat, DropAble.OnDrop {
 
     fun setUpFragment(listFragment: List<Fragment>, fragmentManager: FragmentManager) {
         listFragment.forEachIndexed { index, fragment ->
-            val widget = Widget(context)
-            val replaceWidgetHolder = ReplaceWidgetHolder(context, widget)
-            addView(replaceWidgetHolder)
+//            val frameWrap = FrameLayout(context)
+//            frameWrap.layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
+//            frameWrap.layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
+
+            val widget = Widget(context, isEditMode)
+//            val replaceWidgetHolder = ReplaceWidgetHolder(context, widget)
+//            addView(replaceWidgetHolder)
             widget.addFragment(fragment, fragmentManager)
             addView(widget)
         }
         updateEditMode()
-        setupDrag()
     }
 
 
@@ -85,29 +97,35 @@ class WidgetMaster : LinearLayoutCompat, DropAble.OnDrop {
         return result
     }
 
-    fun onDropReplace(parentHoldFragmentContainer: ViewGroup, addView: View) {
-        val targetPosition = getAllViews().indexOfFirst {
-            it == parentHoldFragmentContainer
-        }
-        val sourcePosition = getAllViews().indexOfFirst {
-            it == addView
-        }
-        if (targetPosition == sourcePosition)
+    private fun onDropReplace(dropPlace: View, viewDrop: View) {
+        if (dropPlace == viewDrop)
             return
-        val from = getChildAt(sourcePosition)
-        val to = getChildAt(targetPosition)
+        val dropPosition = getAllViews().indexOfFirst {
+            it == viewDrop
+        }
+        val dropPlacePosition = getAllViews().indexOfFirst {
+            it == dropPlace
+        }
+        if (dropPosition < 0 || dropPlacePosition < 0) {
+            // Handle cases where the views aren't found in the parent view
+            return
+        }
         removeTransition()
-        from.removeSelf()
-        to.removeSelf()
-        addView(to, sourcePosition)
-        addTransition()
-        addView(from, targetPosition)
-        Log.e(TAG, "onDropReplace: $targetPosition")
+
+        dropPlace.removeSelf()
+        viewDrop.removeSelf()
+        if (dropPlace !is EmptyWidget)
+            addView(dropPlace, dropPosition)
+//        addTransition()
+        addView(viewDrop, dropPlacePosition)
+        viewDrop.tag = null
+        Log.e(TAG, "onDropReplace: $dropPlacePosition")
+        updateEditMode()
     }
 
-    fun addTransition() {
+    private fun addTransition() {
         val transition = LayoutTransition()
-        transition.setDuration(1000)
+        transition.setDuration(500)
         transition.enableTransitionType(LayoutTransition.CHANGING)
         transition.enableTransitionType(LayoutTransition.APPEARING)
         transition.enableTransitionType(LayoutTransition.CHANGE_APPEARING)
@@ -116,60 +134,38 @@ class WidgetMaster : LinearLayoutCompat, DropAble.OnDrop {
         layoutTransition = transition
     }
 
-    fun removeTransition() {
+    private fun removeTransition() {
         layoutTransition = null
     }
 
-    fun setupDrag() {
-        for (i in 0 until childCount) {
-            val v = getChildAt(i)
-            if (v is DropAble) {
-                v.setonDropAddView(this)
-                v.setOnDragListener(dragInstance)
-            }
-            if (v is Widget) {
-                v.setOnLongClickListener {
-                    val ds = DragShadow(v)
-                    val data = ClipData.newPlainText("", "")
-                    v.startDragAndDrop(data, ds, v, View.DRAG_FLAG_OPAQUE)
-                    true
-                }
-            }
-        }
-
-    }
-
-    override fun onDropAddView(dropAble: DropAble, viewNeedDrop: View) {
+    override fun onDropAddView(dropPlace: View, viewDrop: View) {
         Log.e(TAG, "onDropAddView: ")
-        when (dropAble) {
-//            addView1 -> onDropReplace(binding.parent1, viewNeedDrop)
-//            binding.addView2 -> findReplaceRequest()?.onDropReplace(binding.parent2, viewNeedDrop)
-            is Widget -> {
-                onDropReplace(dropAble, viewNeedDrop)
-            }
-        }
+        if (dropPlace is EmptyWidget)
+            onDropReplace(dropPlace, viewDrop)
     }
 
-    override fun onHover(viewNeedDrop: View) {
-        if (viewNeedDrop.tag != null || (viewNeedDrop.tag as? View?)?.parent != null)
+    override fun onHover(dropPlace: View, viewDrop: View) {
+        Log.e(TAG, "onHover: $viewDrop")
+        if (viewDrop.tag != null || (viewDrop.tag as? View?)?.parent != null)
             return
-        val layoutParams = viewNeedDrop.layoutParams
-        val tempView = View(context)
-        tempView.layoutParams = layoutParams
-        viewNeedDrop.tag = tempView
+        val tempView = EmptyWidget(context, isEditMode)
+        viewDrop.tag = tempView
         addTransition()
         val index = getAllViews().indexOfFirst {
-            it == viewNeedDrop
+            it == dropPlace
         }
         addView(tempView, index)
+
     }
 
-    override fun onLeaveHover(viewNeedDrop: View) {
-        val view = viewNeedDrop.tag as? View?
-        view?.let {
-            removeView(it)
+    override fun onLeaveHover(viewDrop: View) {
+        Log.e(TAG, "onLeaveHover: $viewDrop")
+        val view = viewDrop.tag as? View?
+        view?.post {
+            removeTransition()
+            removeView(view)
+            viewDrop.tag = null
         }
-        viewNeedDrop.tag = null
     }
 
 }

@@ -16,7 +16,6 @@
             android:layout_width="wrap_content"
             android:layout_height="200dp"
             android:animateLayoutChanges="true"
-            android:background="#292A2D"
             android:gravity="center">
 
         </com.dat.drag_drop_fragment.widget.WidgetMaster>

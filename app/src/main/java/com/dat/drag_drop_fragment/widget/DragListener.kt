@@ -40,12 +40,7 @@ class DragListener : View.OnDragListener {
 
     private var isDropped = false
     override fun onDrag(v: View, event: DragEvent): Boolean {
-//        Log.e(
-//            "DropListener",
-//            "DropListener onDrag\ntarget :$v\nsource :${event.localState}\naction : ${
-//                stringByAction(event.action)
-//            }"
-//        )
+
         when (event.action) {
             DragEvent.ACTION_DRAG_STARTED -> {
                 isDropped = false
@@ -60,7 +55,7 @@ class DragListener : View.OnDragListener {
             }
 
             DragEvent.ACTION_DRAG_EXITED -> {
-                if (v is ReplaceWidgetHolder) {
+                if (v is DropAble) {
                     v.onLeaveHover(event.localState as? View?)
                 }
             }
@@ -70,8 +65,8 @@ class DragListener : View.OnDragListener {
                 view?.post {
                     view.visibility = View.VISIBLE
                 }
-                if (v is DropAble) {
-                    v.onLeaveHover(v)
+                if (v is Widget) {
+                    v.onLeaveHover(view)
                 }
             }
 
@@ -80,7 +75,7 @@ class DragListener : View.OnDragListener {
                 (event.localState as? View?)?.visibility = View.VISIBLE
                 val viewFrom = event.localState
                 if (v is DropAble && viewFrom is View)
-                    v.drop(viewFrom)
+                    v.onDrop(viewFrom)
                 else
                     return false
             }
