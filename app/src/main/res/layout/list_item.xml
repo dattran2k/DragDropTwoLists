@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="5dp"
-    android:background="@color/color_widget_per">
+    android:background="@color/purple_200">
 
     <TextView
         android:id="@+id/text"

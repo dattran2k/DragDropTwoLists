@@ -45,11 +45,14 @@ open class Widget : FrameLayout, DropAble {
         findWidgetMaster()?.let {
             updateMode(isEditMode, it.viewPortWidth)
         }
-        setOnLongClickListener {
-            val ds = DragShadow(this)
+        (getChildAt(0) as? ViewGroup?)?.getChildAt(0)?.setOnLongClickListener {
+            Log.e(TAG, "setOnLongClickListener: $it")
+            val ds = DragShadow(it)
             val data = ClipData.newPlainText("", "")
-            if (isEditMode)
-                startDragAndDrop(data, ds, this, View.DRAG_FLAG_OPAQUE)
+            if (isEditMode) {
+                it.tag = this
+                it.startDragAndDrop(data, ds, it, View.DRAG_FLAG_OPAQUE)
+            }
             isEditMode
         }
         setBackgroundColor(ContextCompat.getColor(context, R.color.color_widget))
@@ -83,6 +86,14 @@ open class Widget : FrameLayout, DropAble {
 
     fun addFragment(fragmentAdd: Fragment, fragmentManager: FragmentManager) {
         val fragmentContainerView = FragmentContainerView(context)
+        val padding = toPx(20)
+        fragmentContainerView.setPadding(padding, padding, padding, padding)
+        fragmentContainerView.setBackgroundColor(
+            ContextCompat.getColor(
+                context,
+                R.color.purple_700
+            )
+        )
         fragmentContainerView.id = View.generateViewId()
         addView(fragmentContainerView)
         val t: FragmentTransaction = fragmentManager.beginTransaction()
@@ -97,11 +108,17 @@ open class Widget : FrameLayout, DropAble {
         } else {
             setOnDragListener(null)
         }
-        layoutParams?.width = if (isEditMode) (viewPortWidth - toPx(MARGIN_START_EDIT_MODE)) / 4 else viewPortWidth / 2
+        layoutParams?.width = if (isEditMode)
+            (viewPortWidth - toPx(MARGIN_START_EDIT_MODE)) / 4
+        else
+            viewPortWidth / 2
         layoutParams?.height = ViewGroup.LayoutParams.MATCH_PARENT
         val currentViewPos = findWidgetMaster()?.indexOfChild(this)
         updateLayoutParams<MarginLayoutParams> {
-            marginStart = if (currentViewPos != null && currentViewPos > -1 && currentViewPos % 2 == 0) toPx(16) else 0
+            marginStart =
+                if (currentViewPos != null && currentViewPos > -1 && currentViewPos % 2 == 0) toPx(
+                    16
+                ) else 0
         }
         requestLayout()
     }

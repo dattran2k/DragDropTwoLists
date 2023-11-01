@@ -40,42 +40,42 @@ class DragListener : View.OnDragListener {
 
     private var isDropped = false
     override fun onDrag(v: View, event: DragEvent): Boolean {
-
+        val dragView = event.localState as? View?
+        val widget = (event.localState as? View?)?.tag as? View?
+        val place = v
         when (event.action) {
             DragEvent.ACTION_DRAG_STARTED -> {
                 isDropped = false
-                (event.localState as View).visibility = View.INVISIBLE
+                dragView?.visibility = View.INVISIBLE
             }
 
             DragEvent.ACTION_DRAG_ENTERED -> {
                 Log.e(TAG, "onDrag: ${stringByAction(event.action)}")
-                if (v is DropAble) {
-                    v.onHover(event.localState as? View?)
+                if (place is DropAble) {
+                    place.onHover(widget)
                 }
             }
 
             DragEvent.ACTION_DRAG_EXITED -> {
-                if (v is DropAble) {
-                    v.onLeaveHover(event.localState as? View?)
+                if (place is DropAble) {
+                    place.onLeaveHover(widget)
                 }
             }
 
             DragEvent.ACTION_DRAG_ENDED -> {
-                val view = event.localState as? View?
-                view?.post {
-                    view.visibility = View.VISIBLE
+                dragView?.post {
+                    dragView.visibility = View.VISIBLE
                 }
-                if (v is Widget) {
-                    v.onLeaveHover(view)
+                if (place is Widget) {
+                    place.onLeaveHover(widget)
                 }
             }
 
             DragEvent.ACTION_DROP -> {
                 isDropped = true
-                (event.localState as? View?)?.visibility = View.VISIBLE
-                val viewFrom = event.localState
-                if (v is DropAble && viewFrom is View)
-                    v.onDrop(viewFrom)
+                dragView?.visibility = View.VISIBLE
+                if (place is DropAble && widget is View)
+                    place.onDrop(widget)
                 else
                     return false
             }
