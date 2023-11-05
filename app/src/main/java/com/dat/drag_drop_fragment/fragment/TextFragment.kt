@@ -13,9 +13,9 @@ class TextFragment : Fragment() {
 
     companion object {
         val NAME = "123123"
-        fun newInstance(id: String): TextFragment {
+        fun newInstance(id: Int): TextFragment {
             val args = Bundle()
-            args.putString(NAME, id)
+            args.putInt(NAME, id)
             val fragment = TextFragment()
             fragment.arguments = args
             return fragment
@@ -39,8 +39,8 @@ class TextFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val name = arguments?.getString(NAME) ?: ""
-        binding.text.text = name
+        val name = arguments?.getInt(NAME) ?: ""
+        binding.text.text = name.toString()
         view.tag = name
         Log.e(TAG, "onViewCreated: $name")
     }

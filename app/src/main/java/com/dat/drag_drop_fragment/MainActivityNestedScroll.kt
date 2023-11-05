@@ -1,13 +1,13 @@
 package com.dat.drag_drop_fragment
 
+import android.content.res.Resources
 import android.os.Bundle
-import android.view.ViewGroup.MarginLayoutParams
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.updateLayoutParams
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.dat.drag_drop_fragment.databinding.ActivityMainRvBinding
-import com.dat.drag_drop_fragment.fragment.TextFragment
+import com.dat.drag_drop_fragment.fragment.MyAdapter
+import com.dat.drag_drop_fragment.fragment.PreCachingLayoutManager
 import com.dat.drag_drop_fragment.widget.DragListener
-import com.dat.drag_drop_fragment.widget.WidgetMaster.Companion.MARGIN_START_EDIT_MODE
 
 class MainActivityNestedScroll : AppCompatActivity() {
     val dragInstance: DragListener = DragListener()
@@ -18,20 +18,14 @@ class MainActivityNestedScroll : AppCompatActivity() {
         binding = ActivityMainRvBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
-        val listFragment = list.map {
-            TextFragment.newInstance(it.toString())
-        }
-
-        binding.widgetMaster.setUpFragment(listFragment, supportFragmentManager)
-        ViewModel.isEnableEditModel.observe(this) {
-            binding.widgetMaster.updateEditMode(it)
-            binding.widgetMaster.updateLayoutParams<MarginLayoutParams> {
-                marginStart = if (it == true) toPx(MARGIN_START_EDIT_MODE) else 0
-            }
-        }
+        val homeAdapter = MyAdapter(list, this)
+        binding.rv.layoutManager = PreCachingLayoutManager(
+            this, Resources.getSystem().displayMetrics.widthPixels * 99, LinearLayoutManager.HORIZONTAL, false
+        )
+        binding.rv.adapter = homeAdapter
+        binding.rv.setItemViewCacheSize(99)
         binding.btn.setOnClickListener {
-            ViewModel.isEnableEditModel.value = ViewModel.isEnableEditModel.value != true
-
+            homeAdapter.updateEditMode(binding.rv)
         }
     }
 }
