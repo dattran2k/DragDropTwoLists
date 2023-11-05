@@ -20,15 +20,21 @@ class EmptyWidget : Widget {
         attrs,
         defStyleAttr
     )
-
+    var viewFrameEmpty : View? = null
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        viewFrameEmpty = View(context)
+        removeAllViews()
+        addView(viewFrameEmpty)
+    }
     override fun onHover(viewDrop: View?) {
         Log.e(TAG, "onHover: ")
-        setBackgroundColor(ContextCompat.getColor(context, R.color.color_replace))
+        viewFrameEmpty?.setBackgroundColor(ContextCompat.getColor(context, R.color.color_replace))
     }
 
     override fun onLeaveHover(viewDrop: View?) {
         Log.e(TAG, "onLeaveHover: ")
-        setBackgroundColor(ContextCompat.getColor(context, R.color.color_widget))
+        viewFrameEmpty?.setBackgroundColor(ContextCompat.getColor(context, R.color.color_widget))
         viewDrop?.let {
             findWidgetMaster()?.onLeaveHover(it)
         }
