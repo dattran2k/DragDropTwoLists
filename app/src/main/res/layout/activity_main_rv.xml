@@ -1,15 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv"
-        android:layout_gravity="center"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical">
 
-        android:orientation="horizontal" />
+        <com.dat.drag_drop_fragment.widget.MyScroller
+            android:id="@+id/scroller"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.dat.drag_drop_fragment.widget.WidgetMaster
+                android:id="@+id/widget_master"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:animateLayoutChanges="true" />
+        </com.dat.drag_drop_fragment.widget.MyScroller>
+
+        <com.dat.drag_drop_fragment.widget.ScrollTrigger
+            android:id="@+id/scroll_trigger_previous"
+            android:layout_width="36dp"
+            android:layout_height="match_parent" />
+
+        <com.dat.drag_drop_fragment.widget.ScrollTrigger
+            android:id="@+id/scroll_trigger_next"
+            android:layout_width="64dp"
+            android:background="@color/black"
+            android:layout_gravity="end"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:fillViewport="true">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
+    <!--    <ListView-->
+    <!--        android:id="@+id/list_view"-->
+    <!--        android:layout_width="match_parent"-->
+
+    <!--        android:layout_height="match_parent"-->
+    <!--        android:layout_gravity="center"-->
+    <!--        android:orientation="horizontal" />-->
 
     <Button
         android:id="@+id/btn"

@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">DragDropTwoLists</string>
+    <item name="key_widget" type="id" />
 </resources>
