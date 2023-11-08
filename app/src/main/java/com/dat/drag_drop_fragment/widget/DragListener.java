@@ -27,7 +27,7 @@ public class DragListener implements View.OnDragListener {
                 if (dragView != null) {
                     dragView.setVisibility(View.INVISIBLE);
                 }
-                if (onEditWidgetStateChanged != null)
+                if(onEditWidgetStateChanged != null)
                     onEditWidgetStateChanged.onDragging(dragView);
                 break;
 
@@ -60,7 +60,6 @@ public class DragListener implements View.OnDragListener {
                 if (onEditWidgetStateChanged != null) {
                     onEditWidgetStateChanged.onDropped(dragView);
                 }
-
                 break;
 
             case DragEvent.ACTION_DROP:

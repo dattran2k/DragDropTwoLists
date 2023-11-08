@@ -29,22 +29,23 @@ import com.dat.drag_drop_fragment.widget.callback.DropAble;
 
 
 public class Widget extends FrameLayout implements DropAble, Observer<Boolean> {
-    private int itemPerPage;
+    public WidgetMaster.WidgetType widgetType = WidgetMaster.WidgetType.TO;
     public int viewPortWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
     public int viewPortHeight = Resources.getSystem().getDisplayMetrics().heightPixels;
     public static final String TAG = "Widget";
     private DragListener dragListener;
-    private boolean isEditMode;
+    private boolean isEditMode = false;
+    private View wrapView;
 
     public Widget(Context context) {
         super(context);
         init();
     }
 
-    public Widget(Context context, DragListener dragListener, int itemPerPage) {
+    public Widget(Context context, DragListener dragListener, WidgetMaster.WidgetType widgetType) {
         super(context);
         this.dragListener = dragListener;
-        this.itemPerPage = itemPerPage;
+        this.widgetType = widgetType;
         init();
     }
 
@@ -62,37 +63,31 @@ public class Widget extends FrameLayout implements DropAble, Observer<Boolean> {
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         ViewModel.INSTANCE.isEnableEditModel().observeForever(this);
+        updateEditMode();
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         ViewModel.INSTANCE.isEnableEditModel().removeObserver(this);
+        setOnLongClick();
     }
 
     @Override
     public void onChanged(Boolean aBoolean) {
+        Log.d(TAG, "onChanged: isEditMode :  " + aBoolean);
+        boolean currentEditMode = isEditMode;
         this.isEditMode = aBoolean;
-        updateEditMode();
+        if (currentEditMode != aBoolean)
+            updateEditMode();
+
     }
 
     private void init() {
-        View wrapView = new View(getContext());
+        wrapView = new View(getContext());
         wrapView.setElevation(10);
         wrapView.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         addView(wrapView);
-        wrapView.setOnLongClickListener(v -> {
-            boolean draggable = fragment != null && isEditMode;
-            Log.e(TAG, "setOnLongClickListener: " + this);
-            if (draggable) {
-                DragShadowBuilder ds = new DragShadowBuilder(this);
-                ClipData data = ClipData.newPlainText("", "");
-                fragment.setTag(this);
-                this.startDragAndDrop(data, ds, fragment, View.DRAG_FLAG_OPAQUE);
-            }
-            return draggable;
-        });
-
         setBackgroundColor(ContextCompat.getColor(getContext(), R.color.color_widget));
         setOnDragListener(dragListener);
     }
@@ -138,6 +133,7 @@ public class Widget extends FrameLayout implements DropAble, Observer<Boolean> {
     }
 
     public void updateEditMode() {
+        setOnLongClick();
         LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) getLayoutParams();
         int currentViewPos = WidgetMaster.findWidgetMaster(this).indexOfChild(this);
         int marginStart = currentViewPos % 2 == 0 && isEditMode ? toPx(16) : 0;
@@ -145,9 +141,20 @@ public class Widget extends FrameLayout implements DropAble, Observer<Boolean> {
             layoutParams.setMarginStart(marginStart);
         }
 
-        int targetWidth = isEditMode ? viewPortWidth / 4 : viewPortWidth / 2;
-        int targetHeight = isEditMode ? viewPortHeight / 2 : viewPortHeight;
-
+        int targetWidth;
+        int targetHeight;
+        if (widgetType == WidgetMaster.WidgetType.TO) {
+            if (isEditMode) {
+                targetWidth = viewPortWidth / 4;
+                targetHeight = viewPortHeight / 2;
+            } else {
+                targetWidth = viewPortWidth / 2;
+                targetHeight = viewPortHeight;
+            }
+        } else {
+            targetWidth = viewPortWidth / 6;
+            targetHeight = viewPortHeight / 3;
+        }
         ValueAnimator widthAnimator = ObjectAnimator.ofInt(getWidth(), targetWidth);
         ValueAnimator heightAnimator = ObjectAnimator.ofInt(getHeight(), targetHeight);
 
@@ -207,6 +214,22 @@ public class Widget extends FrameLayout implements DropAble, Observer<Boolean> {
     public void destroy() {
         removeFragment();
         removeAllViews();
+    }
+
+    public void setOnLongClick() {
+        if (wrapView != null) {
+            wrapView.setOnLongClickListener(this.isEditMode ? v -> {
+                boolean draggable = fragment != null && this.isEditMode;
+                Log.e(TAG, "setOnLongClickListener: " + this);
+                if (draggable) {
+                    DragShadowBuilder ds = new DragShadowBuilder(this);
+                    ClipData data = ClipData.newPlainText("", "");
+                    fragment.setTag(this);
+                    this.startDragAndDrop(data, ds, fragment, View.DRAG_FLAG_OPAQUE);
+                }
+                return draggable;
+            } : null);
+        }
     }
 
 

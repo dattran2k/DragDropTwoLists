@@ -1,5 +1,6 @@
 package com.dat.drag_drop_fragment.widget;
 
+import android.animation.LayoutTransition;
 import android.content.Context;
 import android.content.res.Resources;
 import android.util.AttributeSet;
@@ -19,16 +20,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WidgetMaster extends LinearLayout implements OnDropWidgetMaster {
+    public enum WidgetType {
+        FROM,
+        TO
+    }
 
     public static final String TAG = "WidgetMaster";
     public static final int MARGIN_START_EDIT_MODE = 40;
-    public static final int DEFAULT_ITEM_PER_PAGE = 4;
+
     public static final int KEY_WIDGET = R.id.key_widget;
     public int viewPortWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
     public int viewPortHeight = Resources.getSystem().getDisplayMetrics().heightPixels;
-    public int itemPerPage = DEFAULT_ITEM_PER_PAGE;
-
     public boolean isEditMode = false;
+    public WidgetType widgetType = WidgetType.TO;
 
     public static List<View> getAllViews(ViewGroup viewGroup) {
         List<View> views = new ArrayList<>();
@@ -70,12 +74,12 @@ public class WidgetMaster extends LinearLayout implements OnDropWidgetMaster {
 
     public final DragListener dragInstance = new DragListener();
 
-    public void setUpFragment(List<Fragment> listWidget, FragmentManager fragmentManager) {
-        setUpFragment(listWidget, fragmentManager, DEFAULT_ITEM_PER_PAGE);
+    public void setUpFragment(List<Fragment> listWidget, FragmentManager fragmentManager, WidgetType widgetType) {
+        this.widgetType = widgetType;
+        setUpFragment(listWidget, fragmentManager);
     }
 
-    public void setUpFragment(List<Fragment> listWidget, FragmentManager fragmentManager, int itemPerPage) {
-        this.itemPerPage = itemPerPage;
+    public void setUpFragment(List<Fragment> listWidget, FragmentManager fragmentManager) {
         for (Widget w : getAllWidget()) {
             w.destroy();
         }
@@ -83,7 +87,7 @@ public class WidgetMaster extends LinearLayout implements OnDropWidgetMaster {
         for (int index = 0; index < listWidget.size(); index++) {
             Fragment fragment = listWidget.get(index);
             Widget widget;
-            widget = new Widget(getContext(), dragInstance, itemPerPage);
+            widget = new Widget(getContext(), dragInstance, widgetType);
             widget.addFragment(fragment, fragmentManager);
             widget.setTag(KEY_WIDGET, listWidget.get(index));
             addView(widget);
@@ -96,11 +100,6 @@ public class WidgetMaster extends LinearLayout implements OnDropWidgetMaster {
         for (View view : getAllViews(this)) {
             if (view instanceof Widget) {
                 result.add((Widget) view);
-            } else if (view instanceof ViewGroup) {
-                for (View view2 : getAllViews((ViewGroup) view)) {
-                    if (view2 instanceof Widget)
-                        result.add((Widget) view2);
-                }
             }
         }
         return result;
@@ -112,20 +111,15 @@ public class WidgetMaster extends LinearLayout implements OnDropWidgetMaster {
         }
         List<View> allView = getAllViews(this);
         int dropPlacePosition = allView.indexOf(dropPlace);
-
-
-        View temp = new View(getContext());
-//        addView(temp, dropPlacePosition);
+        int viewDropPosition = allView.indexOf(viewDrop);
+        if (viewDropPosition == -1 && viewDrop instanceof Widget) {
+            ((Widget) viewDrop).updateEditMode();
+        }
+//        removeTransition();
         removeSelf(dropPlace);
         removeSelf(viewDrop);
-
-//        if (!(dropPlace instanceof EmptyWidget) && dropPosition > -1) {
-//            addView(dropPlace, dropPosition);
-//        }
-//        if (dropPlacePosition < getChildCount())
-
+//        addTransition();
         addView(viewDrop, dropPlacePosition);
-//        removeSelf(temp);
         Log.e(TAG, "onDropReplace: " + dropPlacePosition);
     }
 
@@ -145,14 +139,16 @@ public class WidgetMaster extends LinearLayout implements OnDropWidgetMaster {
 
     @Override
     public void onHover(View dropPlace, View viewDrop) {
-        if (dropPlace == viewDrop) {
+        if (dropPlace == viewDrop || widgetType == WidgetType.FROM) {
             return;
         }
         List<View> allView = getAllViews(this);
         int dropPosition = allView.indexOf(viewDrop);
         int dropPlacePosition = allView.indexOf(dropPlace);
-
-
+        if (dropPosition == -1 && viewDrop instanceof Widget) {
+            ((Widget) viewDrop).widgetType = widgetType;
+            ((Widget) viewDrop).updateEditMode();
+        }
         View temp = new View(getContext());
         addView(temp, dropPlacePosition);
         removeSelf(dropPlace);
@@ -186,5 +182,6 @@ public class WidgetMaster extends LinearLayout implements OnDropWidgetMaster {
             parentView.removeView(view);
         }
     }
+
 }
 
